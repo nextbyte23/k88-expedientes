@@ -9,8 +9,13 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Sistema de Expedientes Clínicos",
-  description: "Sistema de control de expedientes para clínica dental y médica.",
+  title: "K88 — Sistema de Expedientes Clínicos",
+  description: "K88 Centro Integral Odontológico y Especialidades Médicas — Sistema de control de expedientes.",
+  icons: {
+    icon: "/logo.svg",
+    shortcut: "/logo.svg",
+    apple: "/logo.svg",
+  },
 };
 
 export default function RootLayout({

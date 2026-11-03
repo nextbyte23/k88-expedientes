@@ -41,7 +41,7 @@ export function AppointmentList() {
   const [showForm, setShowForm] = useState(false)
   const qc = useQueryClient()
 
-  const { data: doctors } = useApi<Doctor[]>(['doctors'], '/api/users')
+  const { data: doctors } = useApi<Doctor[]>(['doctors'], '/api/doctors')
   const { data: patients } = useApi<Patient[]>(['patients-all'], '/api/patients')
   const dateParam = filterDate || new Date().toISOString().split('T')[0]
   const { data: appts, isLoading } = useApi<Appointment[]>(
@@ -49,7 +49,7 @@ export function AppointmentList() {
     `/api/appointments?date=${dateParam}`,
   )
 
-  const doctorOptions = (doctors || []).filter((d) => ['DENTAL_DOCTOR', 'GENERAL_DOCTOR', 'SPECIALIST_DOCTOR'].includes(d.role))
+  const doctorOptions = (doctors || [])
 
   async function changeStatus(appt: Appointment, status: string) {
     try {
