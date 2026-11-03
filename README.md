@@ -23,7 +23,7 @@ Sistema de control de expedientes clínicos para clínica dental y médica.
 
 - **Framework**: Next.js 16 (App Router) + TypeScript
 - **UI**: Tailwind CSS 4 + shadcn/ui + Lucide icons
-- **Base de datos**: Prisma ORM (SQLite para dev, **Turso** para producción)
+- **Base de datos**: Prisma ORM + **PostgreSQL (Supabase)**
 - **Estado**: Zustand (cliente) + TanStack Query (servidor)
 - **Auth**: cookies HttpOnly + bcryptjs (sin NextAuth)
 - **Impresión**: CSS print + render HTML en runtime
@@ -44,91 +44,95 @@ Sistema de control de expedientes clínicos para clínica dental y médica.
 
 ---
 
-## 🚀 Despliegue en Vercel (recomendado)
+## 🚀 Despliegue en Vercel + Supabase (recomendado)
 
-### Paso 1: Sube el código a GitHub
+### Paso 1: Crea el proyecto en Supabase (5 minutos)
 
-1. Crea un repositorio nuevo en GitHub (ej. `k88-expedientes`)
-2. Sube todos los archivos del ZIP a ese repo (puedes arrastrarlos en github.com)
-3. Verifica que el `.gitignore` excluye `node_modules`, `.next`, `.env`, `db/*.db`
-
-### Paso 2: Crea la base de datos en Turso (gratis)
-
-1. Regístrate en https://turso.tech (con GitHub)
-2. Crea una base de datos:
+1. Regístrate en https://supabase.com (con GitHub)
+2. Clic en **"New project"**:
    - **Name**: `k88-clinica`
-   - **Location**: `nrt` (Tokio) o `iad` (USA Este) — elige el más cercano a tus usuarios
-3. Anota estos dos valores:
-   - **URL**: aparece como `libsql://k88-clinica-<usuario>.turso.io`
-   - **Auth Token**: genera uno en "Settings → Tokens"
+   - **Database Password**: elige una contraseña fuerte y **guárdala** (la necesitarás)
+   - **Region**: `Southeast Asia (Singapore)` o `East US` — la más cercana a Tapachula
+3. Espera ~2 minutos mientras Supabase crea el proyecto
+4. Ve a **Project Settings → Database → Connection string**
+5. Verás dos URLs:
+   - **Transaction** (port `6543`) — para `DATABASE_URL` (con pooling, ideal para serverless)
+   - **Session** (port `5432`) — para `DIRECT_URL` (para migraciones)
+6. En cada URL, sustituye `[YOUR-PASSWORD]` por la contraseña que elegiste
+7. Copia ambas URLs completas
 
-### Paso 3: Crea el schema en la base de datos de Turso
-
-En tu computadora local, instala Turso CLI y corre:
-
-```bash
-# Instala Turso CLI (una sola vez)
-curl -sSfL https://get.tur.so/install.sh | bash
-
-# Inicia sesión
-turso auth login
-
-# Crea la base de datos (si no la creaste desde la web)
-turso db create k88-clinica
-
-# Obtén la URL y el token
-turso db show k88-clinica --url
-turso db tokens create k88-clinica
+Ejemplo (con valores ficticios):
+```
+DATABASE_URL=postgresql://postgres.abc123xy:MiPassFuerte2025@aws-0-us-east-1.pooler.supabase.com:6543/postgres?pgbouncer=true
+DIRECT_URL=postgresql://postgres.abc123xy:MiPassFuerte2025@aws-0-us-east-1.pooler.supabase.com:5432/postgres
 ```
 
-Después, crea un archivo `.env` temporal con esos valores y sube el schema:
+### Paso 2: Sube el código a GitHub
+
+1. Descarga y descomprime el ZIP en una carpeta local (ej. `k88-expedientes`)
+2. Entra a https://github.com/new y crea un repo (ej. `k88-expedientes`)
+3. Sube los archivos:
+   - **Opción web**: arrastra los archivos en github.com (sin `git init`)
+   - **Opción Git CLI**:
+     ```bash
+     cd k88-expedientes
+     git init
+     git add .
+     git commit -m "Sistema K88 expedientes clínicos"
+     git branch -M main
+     git remote add origin https://github.com/<tu-usuario>/k88-expedientes.git
+     git push -u origin main
+     ```
+
+### Paso 3: Crea el schema y carga datos en Supabase
+
+En tu computadora local, dentro de la carpeta del proyecto:
 
 ```bash
-# En tu .env local:
-DATABASE_URL=libsql://k88-clinica-<usuario>.turso.io
-DATABASE_AUTH_TOKEN=<tu-token>
+# Instala dependencias (necesitas Node 18+ o Bun)
+bun install
+# o: npm install
 
-# Crea las tablas en Turso
+# Crea un archivo .env con las dos URLs de Supabase
+# (copia de .env.example y sustituye los valores)
+
+# Crea las tablas en Supabase
 bun run db:push
+# o: npm run db:push
 
-# (Opcional) Carga datos demo
+# Carga datos demo (usuarios K88 + pacientes + citas + pagos)
 bun run db:seed
 bun run db:setup-k88
 ```
 
 ### Paso 4: Conecta Vercel a GitHub
 
-1. Ve a https://vercel.com y regístrate (con GitHub)
-2. Clic en **"Add New Project"**
-3. Importa el repositorio `k88-expedientes`
-4. Vercel detecta Next.js automáticamente — no necesitas cambiar settings
-5. En **"Environment Variables"**, agrega:
-   - `DATABASE_URL` = `libsql://k88-clinica-<usuario>.turso.io`
-   - `DATABASE_AUTH_TOKEN` = `<tu-token>`
-6. Clic en **"Deploy"**
-
-En ~2 minutos tendrás tu app en `https://k88-expedientes.vercel.app` (URL real depende del nombre del repo).
+1. Ve a https://vercel.com → "Add New Project"
+2. Importa el repo `k88-expedientes`
+3. Vercel detecta Next.js automáticamente
+4. En **Environment Variables**, agrega:
+   - `DATABASE_URL` = (la URL con `:6543` y `?pgbouncer=true`)
+   - `DIRECT_URL` = (la URL con `:5432`, sin pgbouncer)
+5. Clic en **Deploy** → en 2-3 minutos está listo
 
 ### Paso 5: Verifica
 
-- Entra a la URL de Vercel
+- Entra a la URL de Vercel (ej. `https://k88-expedientes.vercel.app`)
 - Debe cargar la pantalla de login con "K88"
-- Entra con `admin@k88.mx` / `demo1234` (si corriste el seed) o con cualquier cuenta que hayas configurado
+- Entra con `admin@k88.mx` / `demo1234`
+- Verás el dashboard con los datos de la clínica K88
 
 ---
 
 ## 🟧 Alternativa: Despliegue en Netlify
 
-1. Sube el código a GitHub (igual que paso 1 de Vercel)
-2. Ve a https://netlify.com → "Add new site → Import an existing project"
-3. Selecciona el repo
-4. Build settings (Netlify detecta Next.js automáticamente):
-   - **Build command**: `npm run build` (o deja el default)
-   - **Publish directory**: `.next`
-5. Environment variables:
-   - `DATABASE_URL` = `libsql://...`
-   - `DATABASE_AUTH_TOKEN` = `<token>`
-6. Deploy
+1. Sube el código a GitHub (igual que el paso 2)
+2. https://netlify.com → "Add new site → Import an existing project"
+3. Selecciona el repo — Netlify detecta Next.js
+4. Environment variables:
+   - `DATABASE_URL` = (URL con `:6543` y `?pgbouncer=true`)
+   - `DIRECT_URL` = (URL con `:5432`)
+5. Deploy
 
 ---
 
@@ -136,7 +140,7 @@ En ~2 minutos tendrás tu app en `https://k88-expedientes.vercel.app` (URL real 
 
 ### Requisitos
 - Node.js 18+ (recomendado 20+) o Bun
-- Una terminal
+- Una cuenta de Supabase (usa la misma de producción o crea un proyecto dev separado)
 
 ### Setup
 
@@ -145,14 +149,15 @@ En ~2 minutos tendrás tu app en `https://k88-expedientes.vercel.app` (URL real 
 bun install
 # o: npm install
 
-# 2. Crea la base de datos local SQLite
+# 2. Crea .env con las URLs de Supabase (copia de .env.example)
+#    DATABASE_URL=postgresql://...
+#    DIRECT_URL=postgresql://...
+
+# 3. Crea las tablas
 bun run db:push
-# o: npm run db:push
 
-# 3. Carga datos demo (6 usuarios + 3 pacientes + citas/pagos)
+# 4. Carga datos demo
 bun run db:seed
-
-# 4. Configura las cuentas K88 (renombra correos a @k88.mx)
 bun run db:setup-k88
 
 # 5. Inicia el servidor de desarrollo
@@ -168,7 +173,7 @@ Abre http://localhost:3000 y entra con cualquiera de las cuentas demo.
 
 ```
 prisma/
-  schema.prisma       # Modelo de datos (16 tablas)
+  schema.prisma       # Modelo de datos (PostgreSQL, 16 tablas)
   seed.ts             # Datos demo iniciales
   setup-k88.ts        # Script de configuración para K88
 
@@ -176,7 +181,7 @@ src/
   app/
     api/              # 20+ rutas REST con control de roles
     page.tsx          # Página única (SPA con Zustand)
-    layout.tsx        # Layout raíz
+    layout.tsx
   components/
     appointments/     # Citas
     billing/          # Facturación
@@ -200,7 +205,7 @@ src/
   lib/
     auth.ts           # Cookies + bcryptjs + sesiones
     api.ts            # Helpers de respuesta
-    db.ts             # Prisma client (SQLite/Turso)
+    db.ts             # Prisma client (PostgreSQL)
     format.ts         # Formato MX (moneda, fechas, etiquetas)
     roles.ts          # Constantes de roles
     use-api.ts        # Hooks de TanStack Query
@@ -222,23 +227,39 @@ src/
 
 ---
 
+## 💾 Backups
+
+**Desde Supabase** (web):
+- Ve a tu proyecto → **Database → Table Editor** → exportar a CSV
+- O **Database → Backups** para snapshots automáticos diarios (plan free)
+
+**Con pg_dump** (CLI):
+```bash
+pg_dump "postgresql://postgres.[ref]:[pwd]@aws-0-[region].pooler.supabase.com:5432/postgres" \
+  --format=plain --no-owner --no-acl > backup.sql
+```
+
+**Restaurar**:
+```bash
+psql "postgresql://postgres.[ref]:[pwd]@aws-0-[region].pooler.supabase.com:5432/postgres" \
+  < backup.sql
+```
+
+---
+
 ## ❓ Preguntas frecuentes
 
-**¿Puedo usar PostgreSQL en vez de Turso?**
-Sí. Cambia `provider = "sqlite"` a `provider = "postgresql"` en `prisma/schema.prisma`, instala `@prisma/adapter-pg` o usa el cliente estándar, y actualiza `DATABASE_URL` a una URL de PostgreSQL (Neon, Supabase, etc.). El resto del código funciona igual.
+**¿Por qué Supabase y no SQLite directo en Vercel?**
+Vercel y Netlify son serverless — no tienen filesystem persistente. SQLite guarda datos en un archivo local que se pierde entre invocaciones. Supabase ofrece PostgreSQL gestionado con free tier generoso (500MB, pausado tras 1 semana de inactividad).
 
-**¿Por qué Turso y no SQLite directo en Vercel?**
-Vercel y Netlify son serverless — no tienen filesystem persistente. SQLite guarda datos en un archivo local que se pierde entre invocaciones. Turso es SQLite sobre la red, así que conserva los datos.
+**¿Cuánto cuesta Supabase?**
+Plan free: 500MB de almacenamiento, 2 proyectos, pausado tras 1 semana sin actividad (se reactiva con un clic). Plan Pro ($25/mes): 8GB, sin pausa, ideal para producción clínica.
 
-**¿Cuánto cuesta Turso?**
-El plan free incluye: 500 bases de datos, 9GB totales, 1 billón de lecturas/mes — más que suficiente para una clínica pequeña.
+**¿Puedo usar Neon o Railway en vez de Supabase?**
+Sí. Solo cambia las URLs en `.env` — el código funciona igual porque usa Prisma + PostgreSQL estándar.
 
 **¿Puedo agregar más médicos o pacientes después?**
 Sí, desde el panel de admin o recepción. No necesitas modificar el código.
-
-**¿Cómo hago backup de los datos?**
-Turso: `turso db dump k88-clinica > backup.sql`
-Local: copia el archivo `db/local.db`
 
 ---
 

@@ -1,23 +1,16 @@
 import { PrismaClient } from '@prisma/client'
-import { PrismaLibSql } from '@prisma/adapter-libsql'
-import { createClient } from '@libsql/client'
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
 }
 
-// Works for both:
-//  - Local dev:  DATABASE_URL=file:./db/local.db
-//  - Production: DATABASE_URL=libsql://<db>.turso.io  +  DATABASE_AUTH_TOKEN=<token>
-const libsql = createClient({
-  url: process.env.DATABASE_URL!,
-  authToken: process.env.DATABASE_AUTH_TOKEN || undefined,
-})
-
-const adapter = new PrismaLibSql(libsql)
-
+// Standard Prisma client for PostgreSQL (Supabase, Neon, etc.)
+// Set DATABASE_URL to the pooled connection (transaction mode, port 6543)
+// Set DIRECT_URL to the direct connection (port 5432) for migrations
 export const db =
   globalForPrisma.prisma ??
-  new PrismaClient({ adapter })
+  new PrismaClient({
+    log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
+  })
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = db

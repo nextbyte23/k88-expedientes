@@ -1,13 +1,15 @@
 // Schema del Sistema de Expedientes Clínicos
 // Clínica Dental y Médica General/Especialistas
+// Compatible con PostgreSQL (Supabase, Neon, etc.)
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")       // Pooled connection (transaction mode, port 6543) — para runtime
+  directUrl = env("DIRECT_URL")          // Direct connection (port 5432) — para migrations
 }
 
 // Roles del sistema
