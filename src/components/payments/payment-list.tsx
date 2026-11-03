@@ -134,7 +134,7 @@ function PaymentForm({ patients, onClose, onSaved }: { patients: Patient[]; onCl
   )
 
   // Catálogo de servicios para autocompletar conceptos
-  const { data: services } = useApi<Array<{ id: string; name: string; category: string; defaultPrice: number }>>(
+  const { data: services } = useApi<Array<{ id: string; name: string; category: string; defaultPrice: number; maxPrice: number | null }>>(
     ['services'],
     '/api/services',
   )
@@ -157,7 +157,7 @@ function PaymentForm({ patients, onClose, onSaved }: { patients: Patient[]; onCl
   function addItem() {
     setItems((prev) => [...prev, { concept: 'OTHER', description: '', amount: '' }])
   }
-  function addServiceFromCatalog(svc: { id: string; name: string; category: string; defaultPrice: number }) {
+  function addServiceFromCatalog(svc: { id: string; name: string; category: string; defaultPrice: number; maxPrice?: number | null }) {
     setItems((prev) => [...prev, {
       concept: svc.category === 'CONSULTATION' ? 'CONSULTATION' : svc.category === 'STUDY' ? 'STUDY' : svc.category === 'MEDICAL' || svc.category === 'DENTAL' ? 'TREATMENT' : 'OTHER',
       description: svc.name,
@@ -264,7 +264,7 @@ function PaymentForm({ patients, onClose, onSaved }: { patients: Patient[]; onCl
           {/* Catálogo de servicios — acceso rápido */}
           {services && services.length > 0 && (
             <div className="p-3 rounded-md border border-teal-200 bg-teal-50 dark:bg-teal-900/20 dark:border-teal-800">
-              <p className="text-xs font-semibold mb-2 text-teal-900 dark:text-teal-200">Catálogo de servicios (clic para agregar)</p>
+              <p className="text-xs font-semibold mb-2 text-teal-900 dark:text-teal-200">Catálogo de servicios (clic para agregar — usa el precio mínimo, ajústalo si aplica)</p>
               <div className="flex flex-wrap gap-1.5">
                 {services.map((s) => (
                   <button
@@ -272,9 +272,18 @@ function PaymentForm({ patients, onClose, onSaved }: { patients: Patient[]; onCl
                     type="button"
                     onClick={() => addServiceFromCatalog(s)}
                     className="text-xs px-2 py-1 rounded-md border border-teal-300 dark:border-teal-700 bg-white dark:bg-slate-800 hover:bg-teal-100 dark:hover:bg-teal-900/40 transition"
-                    title={`Agregar ${s.name} (${formatCurrency(s.defaultPrice)})`}
+                    title={
+                      s.maxPrice && s.maxPrice > s.defaultPrice
+                        ? `${s.name} — rango: ${formatCurrency(s.defaultPrice)} a ${formatCurrency(s.maxPrice)}`
+                        : `${s.name} — ${formatCurrency(s.defaultPrice)}`
+                    }
                   >
-                    + {s.name} <span className="text-muted-foreground">· {formatCurrency(s.defaultPrice)}</span>
+                    + {s.name}{' '}
+                    <span className="text-muted-foreground">
+                      {s.maxPrice && s.maxPrice > s.defaultPrice
+                        ? `· ${formatCurrency(s.defaultPrice)}–${formatCurrency(s.maxPrice)}`
+                        : `· ${formatCurrency(s.defaultPrice)}`}
+                    </span>
                   </button>
                 ))}
               </div>

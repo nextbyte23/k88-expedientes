@@ -12,7 +12,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const body = await parseBody(req)
     const existing = await db.service.findUnique({ where: { id } })
     if (!existing) return notFound('Servicio no encontrado')
-    const { name, description, category, defaultPrice, active } = body
+    const { name, description, category, defaultPrice, maxPrice, active } = body
     const service = await db.service.update({
       where: { id },
       data: {
@@ -20,6 +20,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         description: description ?? existing.description,
         category: category ?? existing.category,
         defaultPrice: defaultPrice !== undefined ? Number(defaultPrice) : existing.defaultPrice,
+        maxPrice: maxPrice !== undefined ? (maxPrice ? Number(maxPrice) : null) : existing.maxPrice,
         active: active ?? existing.active,
       },
     })

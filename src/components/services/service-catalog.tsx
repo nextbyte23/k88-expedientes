@@ -22,6 +22,7 @@ type Service = {
   description: string | null
   category: string
   defaultPrice: number
+  maxPrice: number | null
   active: boolean
 }
 
@@ -31,6 +32,13 @@ const CATEGORIES: Record<string, string> = {
   MEDICAL: 'Médico',
   STUDY: 'Estudio',
   OTHER: 'Otro',
+}
+
+function formatPriceRange(min: number, max: number | null): string {
+  if (max && max > min) {
+    return `${formatCurrency(min)} – ${formatCurrency(max)}`
+  }
+  return formatCurrency(min)
 }
 
 export function ServiceCatalog() {
@@ -73,7 +81,7 @@ export function ServiceCatalog() {
                     <TableCell className="font-medium">{s.name}</TableCell>
                     <TableCell><Badge variant="outline">{CATEGORIES[s.category] || s.category}</Badge></TableCell>
                     <TableCell className="hidden md:table-cell text-xs">{s.description || '—'}</TableCell>
-                    <TableCell className="font-bold">{formatCurrency(s.defaultPrice)}</TableCell>
+                    <TableCell className="font-bold">{formatPriceRange(s.defaultPrice, s.maxPrice)}</TableCell>
                     <TableCell>
                       <Badge className={s.active ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200' : 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-200'}>
                         {s.active ? 'Activo' : 'Inactivo'}
@@ -119,16 +127,27 @@ function ServiceForm({ initial, onClose, onSaved }: { initial: Service | null; o
   const [description, setDescription] = useState(initial?.description || '')
   const [category, setCategory] = useState(initial?.category || 'CONSULTATION')
   const [defaultPrice, setDefaultPrice] = useState(initial ? String(initial.defaultPrice) : '')
+  const [maxPrice, setMaxPrice] = useState(initial?.maxPrice ? String(initial.maxPrice) : '')
   const [saving, setSaving] = useState(false)
 
   async function save() {
     if (!name || !category || !defaultPrice) {
-      toast.error('Nombre, categoría y precio son obligatorios')
+      toast.error('Nombre, categoría y precio mínimo son obligatorios')
+      return
+    }
+    if (maxPrice && Number(maxPrice) <= Number(defaultPrice)) {
+      toast.error('El precio máximo debe ser mayor al precio mínimo')
       return
     }
     setSaving(true)
     try {
-      const body = { name, description: description || undefined, category, defaultPrice: Number(defaultPrice) }
+      const body = {
+        name,
+        description: description || undefined,
+        category,
+        defaultPrice: Number(defaultPrice),
+        maxPrice: maxPrice ? Number(maxPrice) : undefined,
+      }
       if (isEdit) {
         await apiPut(`/api/services/${initial!.id}`, body)
       } else {
@@ -167,13 +186,21 @@ function ServiceForm({ initial, onClose, onSaved }: { initial: Service | null; o
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Precio (MXN) *</Label>
+              <Label>Precio mínimo (MXN) *</Label>
               <Input type="number" value={defaultPrice} onChange={(e) => setDefaultPrice(e.target.value)} placeholder="500" />
             </div>
           </div>
           <div className="space-y-1.5">
+            <Label>Precio máximo (MXN) — opcional</Label>
+            <Input type="number" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} placeholder="Vacío = precio único" />
+            <p className="text-xs text-muted-foreground">
+              Si el servicio tiene precio fijo, deja este campo vacío.
+              Si tiene rango (ej. $250–$300), captura el máximo aquí.
+            </p>
+          </div>
+          <div className="space-y-1.5">
             <Label>Descripción</Label>
-            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} placeholder="Detalle del servicio" />
+            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} placeholder="Detalle del servicio (subgrupo, notas, etc.)" />
           </div>
         </div>
         <DialogFooter>

@@ -338,7 +338,8 @@ model Service {
   name         String
   description  String?
   category     String   // CONSULTATION | DENTAL | MEDICAL | STUDY | OTHER
-  defaultPrice Float
+  defaultPrice Float    // precio mínimo (o precio único si maxPrice es null)
+  maxPrice     Float?   // precio máximo (null = precio único, set = rango)
   active       Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

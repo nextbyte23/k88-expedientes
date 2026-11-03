@@ -1,63 +1,137 @@
-// Seed inicial de catálogo de servicios y plantillas de recetas para K88
+// Catálogo de servicios K88 — Centro Integral Odontológico y Especialidades Médicas
+// Precios oficiales en MXN
 // Uso: bun prisma/seed-services.ts
 
 import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
+// Estructura de cada servicio:
+//   name: nombre visible
+//   category: CONSULTATION | DENTAL | STUDY | OTHER (categoría interna del sistema)
+//   subgroup: Odontología general | Odontopediatría | Cirugía / Especialidad | Ortodoncia | Insumos
+//   minPrice: precio mínimo (precio único si es "Precio único")
+//   maxPrice: precio máximo (null si es precio único)
+//   description: texto que se muestra en el catálogo
+type ServiceInput = {
+  name: string
+  category: 'CONSULTATION' | 'DENTAL' | 'STUDY' | 'OTHER'
+  subgroup: string
+  minPrice: number
+  maxPrice?: number | null
+}
+
+const services: ServiceInput[] = [
+  // ============ ODONTOLOGÍA GENERAL (25) ============
+  { name: 'Resina (1 cara)', category: 'DENTAL', subgroup: 'Odontología general', minPrice: 600 },
+  { name: 'Resina (2 caras)', category: 'DENTAL', subgroup: 'Odontología general', minPrice: 800 },
+  { name: 'Resina estética', category: 'DENTAL', subgroup: 'Odontología general', minPrice: 1500 },
+  { name: 'Endodoncia anterior', category: 'DENTAL', subgroup: 'Odontología general', minPrice: 1500, maxPrice: 1800 },
+  { name: 'Endodoncia posterior', category: 'DENTAL', subgroup: 'Odontología general', minPrice: 3000 },
+  { name: 'Corona de zirconia', category: 'DENTAL', subgroup: 'Odontología general', minPrice: 7000, maxPrice: 8000 },
+  { name: 'Corona metal-porcelana', category: 'DENTAL', subgroup: 'Odontología general', minPrice: 3000, maxPrice: 3800 },
+  { name: 'Corona de E-max', category: 'DENTAL', subgroup: 'Odontología general', minPrice: 5000 },
+  { name: 'Corona de disilicato', category: 'DENTAL', subgroup: 'Odontología general', minPrice: 4000 },
+  { name: 'Corona de resina', category: 'DENTAL', subgroup: 'Odontología general', minPrice: 2000, maxPrice: 2500 },
+  { name: 'Cirugía de 3ras', category: 'DENTAL', subgroup: 'Odontología general', minPrice: 2500 },
+  { name: 'Cirugía de 3ras complejas', category: 'DENTAL', subgroup: 'Odontología general', minPrice: 3500, maxPrice: 3800 },
+  { name: 'Consulta general', category: 'CONSULTATION', subgroup: 'Odontología general', minPrice: 250, maxPrice: 300 },
+  { name: 'Consulta de especialidad', category: 'CONSULTATION', subgroup: 'Odontología general', minPrice: 800, maxPrice: 1000 },
+  { name: 'Radiografía apical', category: 'STUDY', subgroup: 'Odontología general', minPrice: 250 },
+  { name: 'Limpieza completa (detartraje)', category: 'DENTAL', subgroup: 'Odontología general', minPrice: 600, maxPrice: 700 },
+  { name: 'Blanqueamiento', category: 'DENTAL', subgroup: 'Odontología general', minPrice: 3000, maxPrice: 3500 },
+  { name: 'Endoposte de fibra de vidrio', category: 'DENTAL', subgroup: 'Odontología general', minPrice: 1800 },
+  { name: 'Corona de porcelana', category: 'DENTAL', subgroup: 'Odontología general', minPrice: 4500 },
+  { name: 'Carilla directa sin desgaste', category: 'DENTAL', subgroup: 'Odontología general', minPrice: 2500 },
+  { name: 'Carilla inyectada', category: 'DENTAL', subgroup: 'Odontología general', minPrice: 3000 },
+  { name: 'Carilla estratificada', category: 'DENTAL', subgroup: 'Odontología general', minPrice: 3500 },
+  { name: 'Incrustación de zirconia', category: 'DENTAL', subgroup: 'Odontología general', minPrice: 4000 },
+  { name: 'Incrustación de resina cerámica', category: 'DENTAL', subgroup: 'Odontología general', minPrice: 2500 },
+  { name: 'Escaneo dental', category: 'STUDY', subgroup: 'Odontología general', minPrice: 250 },
+
+  // ============ ODONTOPEDIATRÍA (7) ============
+  { name: 'Limpieza (odontopediatría)', category: 'DENTAL', subgroup: 'Odontopediatría', minPrice: 499 },
+  { name: 'Sellador (c/diente) — pediatría', category: 'DENTAL', subgroup: 'Odontopediatría', minPrice: 300 },
+  { name: 'Resina (pediatría)', category: 'DENTAL', subgroup: 'Odontopediatría', minPrice: 400, maxPrice: 500 },
+  { name: 'Extracción diente temporal', category: 'DENTAL', subgroup: 'Odontopediatría', minPrice: 300, maxPrice: 400 },
+  { name: 'Corona de metal (acero-cromo)', category: 'DENTAL', subgroup: 'Odontopediatría', minPrice: 900, maxPrice: 1800 },
+  { name: 'Mantenedor de espacio', category: 'DENTAL', subgroup: 'Odontopediatría', minPrice: 2250 },
+  { name: 'Pulpo / Pulpectomía', category: 'DENTAL', subgroup: 'Odontopediatría', minPrice: 1500 },
+
+  // ============ CIRUGÍA / ESPECIALIDAD (7) ============
+  { name: 'Tercer molar cerrado', category: 'DENTAL', subgroup: 'Cirugía / Especialidad', minPrice: 2500 },
+  { name: 'Tercer molar abierto', category: 'DENTAL', subgroup: 'Cirugía / Especialidad', minPrice: 5000 },
+  { name: 'Carilla de resina (cirugía)', category: 'DENTAL', subgroup: 'Cirugía / Especialidad', minPrice: 3500 },
+  { name: 'Carilla de zirconia (cirugía)', category: 'DENTAL', subgroup: 'Cirugía / Especialidad', minPrice: 6000 },
+  { name: 'Corona de E-max (cirugía)', category: 'DENTAL', subgroup: 'Cirugía / Especialidad', minPrice: 5000 },
+  { name: 'Incrustación de zirconia (cirugía)', category: 'DENTAL', subgroup: 'Cirugía / Especialidad', minPrice: 4000 },
+  { name: 'Incrustación de resina cerámica (cirugía)', category: 'DENTAL', subgroup: 'Cirugía / Especialidad', minPrice: 2500 },
+
+  // ============ ORTODONCIA (12) ============
+  { name: 'Consulta de ortodoncia', category: 'CONSULTATION', subgroup: 'Ortodoncia', minPrice: 800 },
+  { name: 'Colocación de brackets', category: 'DENTAL', subgroup: 'Ortodoncia', minPrice: 6000, maxPrice: 10000 },
+  { name: 'Cita mensual ortodoncia', category: 'CONSULTATION', subgroup: 'Ortodoncia', minPrice: 700, maxPrice: 1000 },
+  { name: 'Hawley (Retenedor)', category: 'DENTAL', subgroup: 'Ortodoncia', minPrice: 1200, maxPrice: 1800 },
+  { name: 'Hawley', category: 'DENTAL', subgroup: 'Ortodoncia', minPrice: 2300 },
+  { name: 'Hawley plano', category: 'DENTAL', subgroup: 'Ortodoncia', minPrice: 2300 },
+  { name: 'Botón de Nance', category: 'DENTAL', subgroup: 'Ortodoncia', minPrice: 2000 },
+  { name: 'Barra transpalatina', category: 'DENTAL', subgroup: 'Ortodoncia', minPrice: 2000 },
+  { name: 'Quad Hélix', category: 'DENTAL', subgroup: 'Ortodoncia', minPrice: 2800 },
+  { name: 'Hyrax', category: 'DENTAL', subgroup: 'Ortodoncia', minPrice: 4500 },
+  { name: 'Klammt', category: 'DENTAL', subgroup: 'Ortodoncia', minPrice: 3500 },
+  { name: 'Bionator', category: 'DENTAL', subgroup: 'Ortodoncia', minPrice: 4000 },
+
+  // ============ INSUMOS DE ORTODONCIA (5) ============
+  { name: 'Arco (insumo)', category: 'OTHER', subgroup: 'Insumos de ortodoncia', minPrice: 20 },
+  { name: 'Elastómeros (insumo)', category: 'OTHER', subgroup: 'Insumos de ortodoncia', minPrice: 10 },
+  { name: 'Guantes (insumo)', category: 'OTHER', subgroup: 'Insumos de ortodoncia', minPrice: 3 },
+  { name: 'Campo (insumo)', category: 'OTHER', subgroup: 'Insumos de ortodoncia', minPrice: 2 },
+  { name: 'Eyector (insumo)', category: 'OTHER', subgroup: 'Insumos de ortodoncia', minPrice: 4 },
+]
+
 async function main() {
-  console.log('📦 Cargando catálogo de servicios y plantillas de recetas...')
+  console.log('📦 Cargando catálogo de servicios K88...')
+  console.log(`   ${services.length} servicios en 5 subgrupos`)
+  console.log('')
 
   // Limpiar entradas previas
   await prisma.service.deleteMany()
   await prisma.prescriptionTemplate.deleteMany()
 
-  // === Catálogo de servicios ===
-  const services = [
-    // Consultas
-    { name: 'Consulta dental', category: 'CONSULTATION', defaultPrice: 300, description: 'Consulta inicial odontológica' },
-    { name: 'Consulta médica general', category: 'CONSULTATION', defaultPrice: 350, description: 'Consulta con médico general' },
-    { name: 'Consulta de especialidad', category: 'CONSULTATION', defaultPrice: 600, description: 'Consulta con especialista' },
-    { name: 'Revisión/Control', category: 'CONSULTATION', defaultPrice: 200, description: 'Consulta de seguimiento' },
-
-    // Dentales
-    { name: 'Limpieza dental (profilaxis)', category: 'DENTAL', defaultPrice: 600, description: 'Profilaxis dental completa' },
-    { name: 'Aplicación de flúor', category: 'DENTAL', defaultPrice: 150, description: 'Aplicación tópica de flúor' },
-    { name: 'Sellante dental', category: 'DENTAL', defaultPrice: 250, description: 'Sellante por pieza' },
-    { name: 'Obturación (resina) — 1 cara', category: 'DENTAL', defaultPrice: 700, description: 'Obturación con resina, una cara' },
-    { name: 'Obturación (resina) — 2 caras', category: 'DENTAL', defaultPrice: 900, description: 'Obturación con resina, dos caras' },
-    { name: 'Obturación (resina) — 3+ caras', category: 'DENTAL', defaultPrice: 1200, description: 'Obturación con resina, tres o más caras' },
-    { name: 'Endodoncia — uniradicular', category: 'DENTAL', defaultPrice: 2500, description: 'Tratamiento de conducto en diente uniradicular' },
-    { name: 'Endodoncia — multiradicular', category: 'DENTAL', defaultPrice: 4000, description: 'Tratamiento de conducto en diente multiradicular' },
-    { name: 'Extracción simple', category: 'DENTAL', defaultPrice: 600, description: 'Extracción dental simple' },
-    { name: 'Extracción quirúrgica', category: 'DENTAL', defaultPrice: 1800, description: 'Extracción quirúrgica (incluye cordal)' },
-    { name: 'Corona metal-cerámica', category: 'DENTAL', defaultPrice: 4500, description: 'Corona metal-cerámica por pieza' },
-    { name: 'Corona de zirconia', category: 'DENTAL', defaultPrice: 6500, description: 'Corona de zirconia por pieza' },
-    { name: 'Provisional', category: 'DENTAL', defaultPrice: 500, description: 'Corona temporal' },
-    { name: 'Blanqueamiento dental', category: 'DENTAL', defaultPrice: 4500, description: 'Tratamiento de blanqueamiento completo' },
-    { name: 'Brackets (consulta inicial ortodoncia)', category: 'DENTAL', defaultPrice: 800, description: 'Valoración para tratamiento de ortodoncia' },
-
-    // Médicos
-    { name: 'Curación simple', category: 'MEDICAL', defaultPrice: 200, description: 'Curación de herida simple' },
-    { name: 'Curación compleja', category: 'MEDICAL', defaultPrice: 500, description: 'Curación de herida compleja' },
-    { name: 'Sutura de heridas', category: 'MEDICAL', defaultPrice: 400, description: 'Sutura por herida' },
-    { name: 'Inyección intramuscular', category: 'MEDICAL', defaultPrice: 150, description: 'Aplicación de medicamento IM' },
-    { name: 'Nebulización', category: 'MEDICAL', defaultPrice: 200, description: 'Terapia nebulizada' },
-    { name: 'Electrocardiograma (ECG)', category: 'MEDICAL', defaultPrice: 500, description: 'Estudio ECG en reposo' },
-    { name: 'Toma de muestra laboratorio', category: 'MEDICAL', defaultPrice: 100, description: 'Toma de muestra para estudios' },
-
-    // Estudios
-    { name: 'Radiografía panorámica', category: 'STUDY', defaultPrice: 350, description: 'Radiografía panorámica dental' },
-    { name: 'Radiografía periapical', category: 'STUDY', defaultPrice: 80, description: 'Radiografía periapical por pieza' },
-    { name: 'Estudios de laboratorio (paquete básico)', category: 'STUDY', defaultPrice: 600, description: 'Biometría, glucosa, orina' },
-  ]
-
+  // Insertar servicios
+  let count = 0
   for (const s of services) {
-    await prisma.service.create({ data: s })
+    await prisma.service.create({
+      data: {
+        name: s.name,
+        description: s.subgroup,
+        category: s.category,
+        defaultPrice: s.minPrice,
+        maxPrice: s.maxPrice ?? null,
+      },
+    })
+    count++
   }
-  console.log(`  ✓ ${services.length} servicios cargados`)
+  console.log(`✓ ${count} servicios cargados`)
 
-  // === Plantillas de recetas globales ===
+  // Estadísticas de precios
+  const ranges = services.filter((s) => s.maxPrice).length
+  const unique = services.length - ranges
+  console.log(`   • ${unique} servicios con precio único`)
+  console.log(`   • ${ranges} servicios con rango (min-max)`)
+
+  // Resumen por subgrupo
+  const groups = services.reduce((acc, s) => {
+    acc[s.subgroup] = (acc[s.subgroup] || 0) + 1
+    return acc
+  }, {} as Record<string, number>)
+  console.log('')
+  console.log('📊 Distribución por subgrupo:')
+  for (const [g, c] of Object.entries(groups)) {
+    console.log(`   ${g.padEnd(30)} ${c} servicios`)
+  }
+
+  // === Plantillas de recetas globales (se conservan las 8 anteriores) ===
   const templates = [
     {
       name: 'Antibiótico para infección dental',
@@ -140,16 +214,15 @@ async function main() {
         diagnosis: t.diagnosis,
         indications: t.indications,
         itemsJson: JSON.stringify(t.items),
-        doctorId: null, // plantillas globales
+        doctorId: null,
       },
     })
   }
-  console.log(`  ✓ ${templates.length} plantillas de recetas cargadas`)
+  console.log('')
+  console.log(`✓ ${templates.length} plantillas de recetas globales cargadas`)
 
   console.log('')
-  console.log('✅ Catálogo cargado exitosamente.')
-  console.log('   Puedes editar o agregar más desde el panel de admin → "Catálogo de servicios"')
-  console.log('   Las plantillas de recetas están disponibles para todos los médicos al crear una receta.')
+  console.log('✅ Catálogo K88 cargado exitosamente.')
 }
 
 main()

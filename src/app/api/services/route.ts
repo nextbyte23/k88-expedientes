@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
   return handleErrors(async () => {
     await requireRole(['ADMIN'])
     const body = await parseBody(req)
-    const { name, description, category, defaultPrice } = body
+    const { name, description, category, defaultPrice, maxPrice } = body
     if (!name || !category || defaultPrice === undefined) {
       return bad('Nombre, categoría y precio son obligatorios')
     }
@@ -30,6 +30,7 @@ export async function POST(req: NextRequest) {
         description: description || null,
         category,
         defaultPrice: Number(defaultPrice),
+        maxPrice: maxPrice ? Number(maxPrice) : null,
       },
     })
     return ok(service)
