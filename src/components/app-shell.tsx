@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import {
   LayoutDashboard, Users, CalendarDays, FileText, HeartPulse, Pill,
-  Wallet, Receipt, Calculator, PackagePlus, Settings, LogOut,
+  Wallet, Calculator, PackagePlus, Settings, LogOut,
   Sun, Moon, Stethoscope, ChevronRight, FilePlus2, Pencil, History, UserCircle,
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
@@ -37,7 +37,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       { view: 'patients', label: 'Pacientes', icon: <Users className="w-4 h-4" /> },
       { view: 'appointments', label: 'Citas', icon: <CalendarDays className="w-4 h-4" /> },
       { view: 'payments', label: 'Pagos', icon: <Wallet className="w-4 h-4" /> },
-      { view: 'billing', label: 'Facturación', icon: <Receipt className="w-4 h-4" /> },
       { view: 'cash-close', label: 'Cierre de caja', icon: <Calculator className="w-4 h-4" /> },
       { view: 'extra-charges', label: 'Cargos pendientes', icon: <PackagePlus className="w-4 h-4" /> },
       { view: 'users', label: 'Usuarios', icon: <Users className="w-4 h-4" /> },
@@ -49,7 +48,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       { view: 'appointments', label: 'Citas', icon: <CalendarDays className="w-4 h-4" /> },
       { view: 'extra-charges', label: 'Cargos pendientes', icon: <PackagePlus className="w-4 h-4" /> },
       { view: 'payments', label: 'Pagos', icon: <Wallet className="w-4 h-4" /> },
-      { view: 'billing', label: 'Facturación', icon: <Receipt className="w-4 h-4" /> },
       { view: 'cash-close', label: 'Cierre de caja', icon: <Calculator className="w-4 h-4" /> },
     ],
     DENTAL_DOCTOR: [
@@ -139,12 +137,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </ul>
       </nav>
       <div className="p-3 border-t border-sidebar-border text-xs text-muted-foreground space-y-1">
-  <p className="truncate">{clinic?.address || '—'}</p>
-  <p className="truncate">{clinic?.phone || '—'}</p>
-  <p className="pt-1.5 mt-1.5 border-t border-sidebar-border/60 text-center">
-    <span className="opacity-70">Designed by NextByte</span>
-  </p>
-</div>
+        <p className="truncate">{clinic?.address || '—'}</p>
+        <p className="truncate">{clinic?.phone || '—'}</p>
+        <p className="pt-1.5 mt-1.5 border-t border-sidebar-border/60 text-center">
+          <span className="opacity-70">Designed by </span>
+          <a
+            href="https://nextbyte.mx"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-teal-600 dark:text-teal-400 hover:underline"
+          >
+            NextByte
+          </a>
+        </p>
+      </div>
     </aside>
   )
 
