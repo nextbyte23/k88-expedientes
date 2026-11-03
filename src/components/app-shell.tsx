@@ -142,9 +142,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   <p className="truncate">{clinic?.address || '—'}</p>
   <p className="truncate">{clinic?.phone || '—'}</p>
   <p className="pt-1.5 mt-1.5 border-t border-sidebar-border/60 text-center">
-    <span className="opacity-70">Designed by </span>
-    NextByte
-    </a>
+    <span className="opacity-70">Designed by NextByte</span>
   </p>
 </div>
     </aside>
