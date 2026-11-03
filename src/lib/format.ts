@@ -106,6 +106,8 @@ export const TOOTH_STATES = [
   { value: 'CROWN', label: 'Corona', color: '#eab308' },
   { value: 'ENDODONTICS', label: 'Endodoncia', color: '#a855f7' },
   { value: 'EXTRACTION_INDICATED', label: 'Extracción indicada', color: '#f97316' },
+  { value: 'BRACKET', label: 'Bracket', color: '#cbd5e1' },
+  { value: 'BAND', label: 'Banda ortodóncica', color: '#facc15' },
   { value: 'OTHER', label: 'Otro', color: '#14b8a6' },
 ] as const
 

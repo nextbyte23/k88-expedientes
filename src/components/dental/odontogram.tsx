@@ -58,6 +58,7 @@ export function Odontogram({ patientId }: { patientId: string }) {
   const [entries, setEntries] = useState<OdontoEntry[]>([])
   const [editingTooth, setEditingTooth] = useState<number | null>(null)
   const [saving, setSaving] = useState(false)
+  const [orthoMode, setOrthoMode] = useState(false)
 
   // Sync entries when the latest record's odontogram data loads/changes.
   useEffect(() => {
@@ -67,6 +68,12 @@ export function Odontogram({ patientId }: { patientId: string }) {
   function entryFor(tooth: number): OdontoEntry | undefined {
     return entries.find((e) => e.toothNumber === tooth)
   }
+
+  // For archwire visualization: count brackets/bands in each arch
+  const upperBracketTeeth = entries.filter((e) => (e.state === 'BRACKET' || e.state === 'BAND') && e.toothNumber <= 16).map((e) => e.toothNumber)
+  const lowerBracketTeeth = entries.filter((e) => (e.state === 'BRACKET' || e.state === 'BAND') && e.toothNumber >= 17).map((e) => e.toothNumber)
+  const hasUpperBrackets = upperBracketTeeth.length >= 2
+  const hasLowerBrackets = lowerBracketTeeth.length >= 2
 
   function updateEntry(tooth: number, e: Partial<OdontoEntry>) {
     setEntries((prev) => {
@@ -127,11 +134,39 @@ export function Odontogram({ patientId }: { patientId: string }) {
             ))}
           </div>
 
+          {/* Ortho mode toggle */}
+          <div className="flex items-center justify-between gap-2 p-2 rounded-md bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800">
+            <div className="text-xs">
+              <p className="font-semibold text-purple-900 dark:text-purple-200">🦷 Modo ortodoncia</p>
+              <p className="text-purple-700 dark:text-purple-300">
+                {orthoMode ? 'Mostrando arco ortodóncico conectando brackets' : 'Activa para visualizar el arco que conecta los brackets'}
+              </p>
+            </div>
+            <Button
+              size="sm"
+              variant={orthoMode ? 'default' : 'outline'}
+              onClick={() => setOrthoMode((v) => !v)}
+              disabled={!hasUpperBrackets && !hasLowerBrackets}
+              className={orthoMode ? 'bg-purple-600 hover:bg-purple-700 text-white' : ''}
+            >
+              {orthoMode ? 'Arco visible' : 'Mostrar arco'}
+            </Button>
+          </div>
+          {!hasUpperBrackets && !hasLowerBrackets && (
+            <p className="text-xs text-muted-foreground -mt-2">
+              💡 Marca dientes como "Bracket" o "Banda ortodóncica" para habilitar la visualización del arco.
+            </p>
+          )}
+
           {/* Chart */}
           <div className="bg-white dark:bg-slate-900 rounded-lg p-4 border border-border overflow-x-auto">
             <div className="min-w-[640px] mx-auto space-y-2">
               {/* Upper row */}
               <div className="text-center text-xs text-muted-foreground mb-1">Maxilar Superior</div>
+              {/* Upper archwire */}
+              {orthoMode && hasUpperBrackets && (
+                <ArchWire teethCount={[...UPPER_RIGHT, ...UPPER_LEFT].length} bracketIndices={[...UPPER_RIGHT, ...UPPER_LEFT].map((t, i) => upperBracketTeeth.includes(t) ? i : -1).filter((i) => i >= 0)} />
+              )}
               <div className="flex justify-center gap-1">
                 {[...UPPER_RIGHT, ...UPPER_LEFT].map((t) => (
                   <Tooth key={t} number={t} entry={entryFor(t)} onClick={() => setEditingTooth(t)} />
@@ -153,6 +188,10 @@ export function Odontogram({ patientId }: { patientId: string }) {
                   <Tooth key={t} number={t} entry={entryFor(t)} onClick={() => setEditingTooth(t)} flipped />
                 ))}
               </div>
+              {/* Lower archwire */}
+              {orthoMode && hasLowerBrackets && (
+                <ArchWire teethCount={[...LOWER_RIGHT, ...LOWER_LEFT].length} bracketIndices={[...LOWER_RIGHT, ...LOWER_LEFT].map((t, i) => lowerBracketTeeth.includes(t) ? i : -1).filter((i) => i >= 0)} />
+              )}
               <div className="text-center text-xs text-muted-foreground mt-1">Maxilar Inferior</div>
             </div>
           </div>
@@ -202,6 +241,8 @@ export function Odontogram({ patientId }: { patientId: string }) {
 
 function Tooth({ number, entry, onClick, flipped }: { number: number; entry?: OdontoEntry; onClick: () => void; flipped?: boolean }) {
   const color = entry ? STATE_COLOR[entry.state] || '#ffffff' : '#ffffff'
+  const isBracket = entry?.state === 'BRACKET'
+  const isBand = entry?.state === 'BAND'
   return (
     <button
       onClick={onClick}
@@ -209,23 +250,73 @@ function Tooth({ number, entry, onClick, flipped }: { number: number; entry?: Od
       title={entry ? `${TOOTH_STATES.find((s) => s.value === entry.state)?.label || entry.state}${entry.notes ? ' · ' + entry.notes : ''}` : 'Sin registro'}
     >
       <svg viewBox="0 0 24 32" className="w-full h-full">
-        {/* tooth shape: a molar-ish rectangle with rounded top */}
+        {/* tooth shape */}
         <path
           d={flipped
             ? "M2 28 Q2 14 12 4 Q22 14 22 28 Q22 30 20 30 L4 30 Q2 30 2 28 Z"
             : "M2 4 Q2 18 12 28 Q22 18 22 4 Q22 2 20 2 L4 2 Q2 2 2 4 Z"}
           fill={color === '#ffffff' ? 'white' : color}
-          stroke="#475569"
-          strokeWidth="1.2"
+          stroke={isBand ? '#facc15' : '#475569'}
+          strokeWidth={isBand ? 2.5 : 1.2}
           opacity={entry ? 1 : 0.55}
         />
+        {/* Bracket overlay: silver square on tooth center */}
+        {isBracket && (
+          <>
+            <rect x="8" y="13" width="8" height="6" rx="0.8" fill="#94a3b8" stroke="#475569" strokeWidth="0.6" />
+            <rect x="9.5" y="14.5" width="5" height="3" fill="none" stroke="#1e293b" strokeWidth="0.4" />
+            {/* slot horizontal line (where wire goes) */}
+            <line x1="8" y1="16" x2="16" y2="16" stroke="#1e293b" strokeWidth="0.5" />
+          </>
+        )}
       </svg>
-      {entry && entry.state !== 'HEALTHY' && (
+      {entry && entry.state !== 'HEALTHY' && !isBracket && !isBand && (
         <span className="absolute inset-0 flex items-center justify-center text-[8px] font-bold text-white pointer-events-none">
           {entry.surface && entry.surface.length > 0 ? entry.surface.map((s) => s[0]).join('') : ''}
         </span>
       )}
     </button>
+  )
+}
+
+// ArchWire: draws a horizontal wire connecting brackets in one arch.
+// teethCount = total teeth in the arch (16 for upper or lower)
+// bracketIndices = indices (0-based) of teeth in this arch that have brackets/bands
+function ArchWire({ teethCount, bracketIndices }: { teethCount: number; bracketIndices: number[] }) {
+  if (bracketIndices.length < 2) return null
+  // Each tooth is w-7 (28px) + gap-1 (4px) = 32px wide
+  // Center of tooth i is at: i * 32 + 14
+  const firstIdx = Math.min(...bracketIndices)
+  const lastIdx = Math.max(...bracketIndices)
+  const startX = firstIdx * 32 + 14
+  const endX = lastIdx * 32 + 14
+  const width = endX - startX
+  return (
+    <div className="flex justify-center" aria-hidden>
+      <svg width={teethCount * 32} height="6" className="overflow-visible">
+        {/* Main wire */}
+        <line
+          x1={startX}
+          y1="3"
+          x2={endX}
+          y2="3"
+          stroke="#94a3b8"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+        {/* Ligatures (small dots at each bracket) */}
+        {bracketIndices.map((idx) => (
+          <circle key={idx} cx={idx * 32 + 14} cy="3" r="1.5" fill="#475569" />
+        ))}
+        {/* Wire end hooks */}
+        <line x1={startX} y1="1" x2={startX} y2="5" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" />
+        <line x1={endX} y1="1" x2={endX} y2="5" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" />
+        {/* Label */}
+        <text x={(startX + endX) / 2} y="-2" textAnchor="middle" fontSize="8" fill="#94a3b8" className="font-mono">
+          ⟵ arco ⟶
+        </text>
+      </svg>
+    </div>
   )
 }
 

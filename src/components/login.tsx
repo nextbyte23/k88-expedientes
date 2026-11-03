@@ -66,11 +66,11 @@ export function Login() {
             </div>
             <div className="flex items-start gap-3">
               <HeartPulse className="w-5 h-5 text-teal-600 mt-0.5" />
-              <p className="text-sm">Notas de evolución NOM-004, odontograma interactivo y recetas digitales.</p>
+              <p className="text-sm">Notas de evolución NOM-004, odontograma interactivo (con brackets y ortodoncia) y recetas digitales.</p>
             </div>
             <div className="flex items-start gap-3">
               <Stethoscope className="w-5 h-5 text-teal-600 mt-0.5" />
-              <p className="text-sm">Recepción con pagos combinados, facturación y cierre de caja diario.</p>
+              <p className="text-sm">Recepción con pagos combinados y cierre de caja diario.</p>
             </div>
           </div>
         </div>
@@ -96,7 +96,7 @@ export function Login() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="usuario@clinicasantafe.mx"
+                  placeholder="usuario@k88.mx"
                   required
                   autoComplete="email"
                 />
