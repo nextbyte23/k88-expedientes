@@ -138,10 +138,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           ))}
         </ul>
       </nav>
-      <div className="p-3 border-t border-sidebar-border text-xs text-muted-foreground">
-        <p className="truncate">{clinic?.address || '—'}</p>
-        <p className="truncate">{clinic?.phone || '—'}</p>
-      </div>
+      <div className="p-3 border-t border-sidebar-border text-xs text-muted-foreground space-y-1">
+  <p className="truncate">{clinic?.address || '—'}</p>
+  <p className="truncate">{clinic?.phone || '—'}</p>
+  <p className="pt-1.5 mt-1.5 border-t border-sidebar-border/60 text-center">
+    <span className="opacity-70">Designed by </span>
+    NextByte
+    </a>
+  </p>
+</div>
     </aside>
   )
 
