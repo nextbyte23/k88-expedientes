@@ -1,14 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import { apiPost } from '@/lib/use-api'
+import { apiPost, useApi } from '@/lib/use-api'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Plus, Trash2 } from 'lucide-react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Plus, Trash2, BookmarkPlus, FileText } from 'lucide-react'
 import { toast } from 'sonner'
 
 type Item = {
@@ -20,6 +21,14 @@ type Item = {
   notes: string
 }
 
+type Template = {
+  id: string
+  name: string
+  diagnosis: string
+  indications: string | null
+  itemsJson: string
+}
+
 const ROUTES = ['Oral', 'Tópica', 'Intravenosa', 'Intramuscular', 'Sublingual', 'Inhalada', 'Oftálmica', 'Ótica']
 
 export function PrescriptionForm({ patientId, onDone, onCancel }: { patientId: string; onDone: () => void; onCancel: () => void }) {
@@ -29,6 +38,9 @@ export function PrescriptionForm({ patientId, onDone, onCancel }: { patientId: s
     { medicationName: '', dose: '', frequency: '', route: 'Oral', duration: '', notes: '' },
   ])
   const [saving, setSaving] = useState(false)
+  const [showTemplates, setShowTemplates] = useState(false)
+  const [showSaveTemplate, setShowSaveTemplate] = useState(false)
+  const { data: templates } = useApi<Template[]>(['prescription-templates'], '/api/prescription-templates')
 
   function updateItem(idx: number, field: keyof Item, value: string) {
     setItems((prev) => prev.map((it, i) => (i === idx ? { ...it, [field]: value } : it)))
@@ -38,6 +50,43 @@ export function PrescriptionForm({ patientId, onDone, onCancel }: { patientId: s
   }
   function removeItem(idx: number) {
     setItems((prev) => prev.filter((_, i) => i !== idx))
+  }
+  function loadTemplate(t: Template) {
+    setDiagnosis(t.diagnosis)
+    setIndications(t.indications || '')
+    try {
+      const parsed = JSON.parse(t.itemsJson) as Item[]
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        setItems(parsed)
+      }
+    } catch {
+      toast.error('Error al cargar la plantilla')
+    }
+    setShowTemplates(false)
+    toast.success(`Plantilla "${t.name}" cargada`)
+  }
+  async function saveAsTemplate(name: string) {
+    if (!diagnosis) {
+      toast.error('El diagnóstico es obligatorio para guardar la plantilla')
+      return
+    }
+    const validItems = items.filter((it) => it.medicationName && it.dose && it.frequency)
+    if (validItems.length === 0) {
+      toast.error('Agrega al menos un medicamento completo')
+      return
+    }
+    try {
+      await apiPost('/api/prescription-templates', {
+        name,
+        diagnosis,
+        indications: indications || undefined,
+        items: validItems,
+      })
+      toast.success(`Plantilla "${name}" guardada`)
+      setShowSaveTemplate(false)
+    } catch (e: any) {
+      toast.error(e.message || 'Error al guardar plantilla')
+    }
   }
 
   async function save() {
@@ -70,7 +119,17 @@ export function PrescriptionForm({ patientId, onDone, onCancel }: { patientId: s
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Nueva receta médica</CardTitle>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <CardTitle className="text-base">Nueva receta médica</CardTitle>
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={() => setShowTemplates(true)}>
+              <FileText className="w-3.5 h-3.5 mr-1" /> Cargar plantilla
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => setShowSaveTemplate(true)}>
+              <BookmarkPlus className="w-3.5 h-3.5 mr-1" /> Guardar como plantilla
+            </Button>
+          </div>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-1.5">
@@ -132,6 +191,72 @@ export function PrescriptionForm({ patientId, onDone, onCancel }: { patientId: s
           <Button onClick={save} disabled={saving}>{saving ? 'Guardando…' : 'Guardar receta'}</Button>
         </div>
       </CardContent>
+
+      {/* Cargar plantilla */}
+      {showTemplates && (
+        <Dialog open onOpenChange={(o) => !o && setShowTemplates(false)}>
+          <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto thin-scroll">
+            <DialogHeader>
+              <DialogTitle>Cargar plantilla de receta</DialogTitle>
+            </DialogHeader>
+            {templates && templates.length > 0 ? (
+              <ul className="divide-y divide-border">
+                {templates.map((t) => (
+                  <li key={t.id} className="py-2">
+                    <button
+                      onClick={() => loadTemplate(t)}
+                      className="w-full text-left px-2 py-1.5 rounded-md hover:bg-muted transition"
+                    >
+                      <p className="font-medium text-sm">{t.name}</p>
+                      <p className="text-xs text-muted-foreground">Dx: {t.diagnosis}</p>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-muted-foreground py-4 text-center">
+                No hay plantillas guardadas. Crea una receta y usa "Guardar como plantilla" para reutilizarla.
+              </p>
+            )}
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Guardar como plantilla */}
+      {showSaveTemplate && (
+        <SaveTemplateDialog
+          defaultName={diagnosis ? `Receta para ${diagnosis.slice(0, 40)}` : ''}
+          onClose={() => setShowSaveTemplate(false)}
+          onSave={(name) => saveAsTemplate(name)}
+        />
+      )}
     </Card>
+  )
+}
+
+function SaveTemplateDialog({ defaultName, onClose, onSave }: { defaultName: string; onClose: () => void; onSave: (name: string) => void }) {
+  const [name, setName] = useState(defaultName)
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Guardar como plantilla</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label>Nombre de la plantilla *</Label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej. Antibiótico para infección dental" />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            La plantilla guardará el diagnóstico, indicaciones y medicamentos actuales.
+            Podrás reutilizarla en futuras recetas.
+          </p>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button onClick={() => { if (name.trim()) onSave(name.trim()) }} disabled={!name.trim()}>Guardar plantilla</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

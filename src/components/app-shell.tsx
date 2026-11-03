@@ -16,6 +16,7 @@ import {
   LayoutDashboard, Users, CalendarDays, FileText, HeartPulse, Pill,
   Wallet, Calculator, PackagePlus, Settings, LogOut,
   Sun, Moon, Stethoscope, ChevronRight, FilePlus2, Pencil, History, UserCircle,
+  DollarSign, FileSignature,
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { ROLE_LABELS } from '@/lib/roles'
@@ -40,6 +41,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       { view: 'cash-close', label: 'Cierre de caja', icon: <Calculator className="w-4 h-4" /> },
       { view: 'extra-charges', label: 'Cargos pendientes', icon: <PackagePlus className="w-4 h-4" /> },
       { view: 'users', label: 'Usuarios', icon: <Users className="w-4 h-4" /> },
+      { view: 'services', label: 'Catálogo de servicios', icon: <DollarSign className="w-4 h-4" /> },
       { view: 'clinic', label: 'Configuración clínica', icon: <Settings className="w-4 h-4" /> },
     ],
     RECEPTION: [
@@ -57,6 +59,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       { view: 'dental-records', label: 'Expedientes dentales', icon: <FileText className="w-4 h-4" /> },
       { view: 'evolution-notes', label: 'Notas de evolución', icon: <FilePlus2 className="w-4 h-4" /> },
       { view: 'prescriptions', label: 'Recetas', icon: <Pill className="w-4 h-4" /> },
+      { view: 'consents', label: 'Consentimientos', icon: <FileSignature className="w-4 h-4" /> },
       { view: 'extra-charges', label: 'Cargos extra', icon: <PackagePlus className="w-4 h-4" /> },
     ],
     GENERAL_DOCTOR: [
@@ -66,6 +69,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       { view: 'medical-records', label: 'Expedientes clínicos', icon: <FileText className="w-4 h-4" /> },
       { view: 'evolution-notes', label: 'Notas de evolución', icon: <FilePlus2 className="w-4 h-4" /> },
       { view: 'prescriptions', label: 'Recetas', icon: <Pill className="w-4 h-4" /> },
+      { view: 'consents', label: 'Consentimientos', icon: <FileSignature className="w-4 h-4" /> },
       { view: 'extra-charges', label: 'Cargos extra', icon: <PackagePlus className="w-4 h-4" /> },
     ],
     SPECIALIST_DOCTOR: [
@@ -75,6 +79,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       { view: 'medical-records', label: 'Expedientes clínicos', icon: <FileText className="w-4 h-4" /> },
       { view: 'evolution-notes', label: 'Notas de evolución', icon: <FilePlus2 className="w-4 h-4" /> },
       { view: 'prescriptions', label: 'Recetas', icon: <Pill className="w-4 h-4" /> },
+      { view: 'consents', label: 'Consentimientos', icon: <FileSignature className="w-4 h-4" /> },
       { view: 'extra-charges', label: 'Cargos extra', icon: <PackagePlus className="w-4 h-4" /> },
     ],
     COORDINATOR: [

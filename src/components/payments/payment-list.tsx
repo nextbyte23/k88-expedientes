@@ -133,6 +133,12 @@ function PaymentForm({ patients, onClose, onSaved }: { patients: Patient[]; onCl
     patientId ? `/api/extra-charges?patientId=${patientId}&status=PENDING` : null,
   )
 
+  // Catálogo de servicios para autocompletar conceptos
+  const { data: services } = useApi<Array<{ id: string; name: string; category: string; defaultPrice: number }>>(
+    ['services'],
+    '/api/services',
+  )
+
   const [appliedCharges, setAppliedCharges] = useState<string[]>([])
 
   const itemsTotal = items.reduce((s, it) => s + (Number(it.amount) || 0), 0) + appliedCharges.reduce((s, id) => {
@@ -150,6 +156,13 @@ function PaymentForm({ patients, onClose, onSaved }: { patients: Patient[]; onCl
   }
   function addItem() {
     setItems((prev) => [...prev, { concept: 'OTHER', description: '', amount: '' }])
+  }
+  function addServiceFromCatalog(svc: { id: string; name: string; category: string; defaultPrice: number }) {
+    setItems((prev) => [...prev, {
+      concept: svc.category === 'CONSULTATION' ? 'CONSULTATION' : svc.category === 'STUDY' ? 'STUDY' : svc.category === 'MEDICAL' || svc.category === 'DENTAL' ? 'TREATMENT' : 'OTHER',
+      description: svc.name,
+      amount: String(svc.defaultPrice),
+    }])
   }
   function removeItem(idx: number) {
     setItems((prev) => prev.filter((_, i) => i !== idx))
@@ -243,6 +256,26 @@ function PaymentForm({ patients, onClose, onSaved }: { patients: Patient[]; onCl
                     />
                     <span className="flex-1">{c.concept} — {formatCurrency(c.amount)} <span className="text-xs text-muted-foreground">({c.doctor?.doctorProfile?.fullName || 'Médico'})</span></span>
                   </label>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Catálogo de servicios — acceso rápido */}
+          {services && services.length > 0 && (
+            <div className="p-3 rounded-md border border-teal-200 bg-teal-50 dark:bg-teal-900/20 dark:border-teal-800">
+              <p className="text-xs font-semibold mb-2 text-teal-900 dark:text-teal-200">Catálogo de servicios (clic para agregar)</p>
+              <div className="flex flex-wrap gap-1.5">
+                {services.map((s) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => addServiceFromCatalog(s)}
+                    className="text-xs px-2 py-1 rounded-md border border-teal-300 dark:border-teal-700 bg-white dark:bg-slate-800 hover:bg-teal-100 dark:hover:bg-teal-900/40 transition"
+                    title={`Agregar ${s.name} (${formatCurrency(s.defaultPrice)})`}
+                  >
+                    + {s.name} <span className="text-muted-foreground">· {formatCurrency(s.defaultPrice)}</span>
+                  </button>
                 ))}
               </div>
             </div>

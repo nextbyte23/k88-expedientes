@@ -49,6 +49,8 @@ model User {
   cashCloses     CashClose[]
   corrections    CorrectionLog[]
   sessions       Session[]
+  templates      PrescriptionTemplate[]
+  consents       InformedConsent[]
 }
 
 model DoctorProfile {
@@ -86,6 +88,7 @@ model Patient {
   payments        Payment[]
   extraCharges    ExtraCharge[]
   billings        Billing[]
+  consents        InformedConsent[]
 }
 
 model Appointment {
@@ -327,4 +330,50 @@ model Session {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt DateTime
   createdAt DateTime @default(now())
+}
+
+// Catálogo de servicios con precios fijos (para uso en cobranza)
+model Service {
+  id           String   @id @default(cuid())
+  name         String
+  description  String?
+  category     String   // CONSULTATION | DENTAL | MEDICAL | STUDY | OTHER
+  defaultPrice Float
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// Plantillas de recetas reutilizables
+model PrescriptionTemplate {
+  id          String   @id @default(cuid())
+  name        String   // ej. "Antibiótico para infección dental"
+  diagnosis   String
+  indications String?
+  itemsJson   String   // JSON array of {medicationName, dose, frequency, route, duration, notes}
+  doctorId    String?  // null = plantilla global, set = plantilla personal del médico
+  doctor      User?    @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Consentimientos informados (3 tipos)
+model InformedConsent {
+  id               String    @id @default(cuid())
+  patientId        String
+  patient          Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctorId         String
+  doctor           User      @relation(fields: [doctorId], references: [id])
+  type             String    // FIRST_VISIT | TREATMENT_PROPOSAL | SURGICAL
+  date             DateTime  @default(now())
+  data             String    // JSON con todos los campos del formulario
+  patientSignature String?   // nombre tecleado como firma
+  doctorSignature  String?   // nombre tecleado como firma
+  witnessSignature String?   // testigo (opcional)
+  signedAt         DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([patientId])
+  @@index([doctorId])
 }

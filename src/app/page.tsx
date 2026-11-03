@@ -23,6 +23,8 @@ import { UsersList } from '@/components/users/users-list'
 import { ClinicForm } from '@/components/clinic/clinic-form'
 import { CorrectionsList } from '@/components/notes/corrections-list'
 import { MyProfile } from '@/components/my-profile'
+import { ServiceCatalog } from '@/components/services/service-catalog'
+import { ConsentList } from '@/components/consents/consent-list'
 import { useApi } from '@/lib/use-api'
 
 function AppContent() {
@@ -79,6 +81,12 @@ function AppContent() {
       break
     case 'my-profile':
       content = <MyProfile />
+      break
+    case 'services':
+      content = <ServiceCatalog />
+      break
+    case 'consents':
+      content = <ConsentList />
       break
     default:
       content = <Dashboard />

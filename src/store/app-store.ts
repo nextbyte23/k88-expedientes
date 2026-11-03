@@ -23,6 +23,8 @@ export type ViewKey =
   | 'clinic'
   | 'corrections'
   | 'my-profile'
+  | 'services'
+  | 'consents'
 
 export type ClinicData = {
   id: string
